@@ -12,8 +12,20 @@ import requests
 
 ruta_log = "/ruta/al/archivo/de/log.log"
 
-def update_cloudflare_a_record(api_key, zone_id, subdomain, ip_address):
-    fqdn = f"{subdomain}.{zone_id}"
+def get_zone_id(api_key, site_name):
+    api_url = "https://api.cloudflare.com/client/v4/zones"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    params = {"name": site_name}
+    response = requests.get(api_url, headers=headers, params=params)
+    result = response.json()["result"]
+    return result[0]["id"] if result else None
+
+def update_cloudflare_a_record(api_key, fqdn, ip_address):
+    zone_id = get_zone_id(api_key, fqdn.split('.')[-2])
+    if not zone_id:
+        logger.error(f"No se encontró ninguna zona para el sitio {fqdn.split('.')[-2]}.")
+        sys.exit(1)
+
     api_url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records"
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     params = {"type": "A", "name": fqdn}
@@ -24,7 +36,8 @@ def update_cloudflare_a_record(api_key, zone_id, subdomain, ip_address):
     logger.info(f"Registro A para {fqdn} actualizado correctamente.") if update_response.status_code == 200 else logger.error("Error al actualizar el registro A:", update_response.json())
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5: sys.exit("Uso: python actualizador_cloudflare.py API_KEY ZONE_ID SUBDOMAIN IP_ADDRESS")
+    if len(sys.argv) != 4: sys.exit("Uso: python actualizador_cloudflare.py API_KEY FQDN IP_ADDRESS")
     logging.basicConfig(ruta_log, level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     logger = logging.getLogger()
-    update_cloudflare_a_record(*sys.argv[1:])
+    api_key, fqdn, ip_address = sys.argv[1:]
+    update_cloudflare_a_record(api_key, fqdn, ip_address)
