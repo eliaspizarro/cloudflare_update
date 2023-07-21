@@ -3,7 +3,7 @@
 # Autor: Elias Pizarro
 # Fecha: 21 de julio de 2023 
 
-# Uso: ./actualizador_cloudflare.py TU_API_KEY camaras.pizpac.cl 203.0.113.1
+# Uso: ./actualizador_cloudflare.py TU_API_KEY subdominio.dominio.tld 203.0.113.1
 # Resultado: Cambia el registro A del fqdn subdominio.dominio.tld con valor 203.0.113.1
 
 import sys
